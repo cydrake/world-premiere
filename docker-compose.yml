@@ -3,5 +3,9 @@ services:
     build: ./chat-api
     ports:
       - "8080:8080"
+      - "5005:5005"
+    volumes:
+      - ./chat-api/src:/app/src
+      - ./chat-api/pom.xml:/app/pom.xml
     env_file:
       - ./chat-api/.env
