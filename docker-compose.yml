@@ -9,3 +9,11 @@ services:
       - ./chat-api/pom.xml:/app/pom.xml
     env_file:
       - ./chat-api/.env
+
+  chat-spa:
+    build: ./chat-spa
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
+

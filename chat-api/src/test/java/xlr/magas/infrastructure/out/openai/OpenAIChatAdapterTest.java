@@ -33,8 +33,7 @@ class OpenAIChatAdapterTest {
     void shouldStreamScenes() {
         String json1 = "{\"order\":1,\"title\":\"Scene 1\",\"setting\":null,\"texts\":null}";
         String json2 = "{\"order\":2,\"title\":\"Scene 2\",\"setting\":null,\"texts\":null}";
-        
-        // Simulate the stream emitting chunks
+
         when(chatClient.prompt()
                 .system(any(java.util.function.Consumer.class))
                 .user(any(java.util.function.Consumer.class))

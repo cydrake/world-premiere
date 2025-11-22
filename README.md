@@ -11,32 +11,52 @@ The repository is organized into the following projects:
 <details>
   <summary><strong>Backend Services</strong></summary>
 
-  - **[chat-api](./chat-api/README.md)**: The backend API built with Java and Spring Boot / Spring AI.
-  - **chat-bff**: Backend for Frontend service.
+  - **[chat-api](./chat-api/README.md)**: The core backend API.
+    - **Tech Stack**: Java 21, Spring Boot 3.2, Spring AI.
+    - **Architecture**: Hexagonal Architecture (Ports & Adapters).
+    - **Features**: Server-Sent Events (SSE) for real-time story streaming, OpenAI integration.
+  - **chat-bff**: Backend for Frontend service (Planned).
 </details>
 
 <details>
   <summary><strong>Frontend Applications</strong></summary>
 
-  - **[chat-spa](./chat-spa/README.md)**: The Single Page Application (Frontend).
-  - **chat-android**: Android mobile application.
-  - **chat-ios**: iOS mobile application.
+  - **[chat-spa](./chat-spa/README.md)**: The web interface.
+    - **Tech Stack**: Next.js 14, TypeScript, Tailwind CSS.
+    - **Features**: Modern chat UI, responsive design, streaming message support.
+  - **chat-android**: Android mobile application (Planned).
+  - **chat-ios**: iOS mobile application (Planned).
 </details>
 
 ## Getting Started
 
-Please refer to the individual project READMEs for specific instructions on how to configure, run, and test each component.
+### Prerequisites
 
-## Running the Ecosystem
+- Docker & Docker Compose
+- Java 21 (for local backend dev)
+- Node.js 18+ (for local frontend dev)
+- OpenAI API Key
 
-You can run the entire ecosystem (or currently configured services) using Docker Compose.
+### Running with Docker Compose
 
-1. Ensure you have Docker and Docker Compose installed.
-2. Create necessary environment files (e.g., `chat-api/.env`) as described in project READMEs.
-3. Run the following command from the root directory:
+The easiest way to run the full stack is using Docker Compose.
 
-```bash
-docker-compose up --build
-```
+1.  **Configure Environment**:
+    Create a `.env` file in `chat-api/` with your OpenAI key:
+    ```properties
+    SPRING_AI_OPENAI_API_KEY=sk-your-api-key-here
+    ```
 
-This will build and start all services defined in `docker-compose.yml`.
+2.  **Run the Application**:
+    ```bash
+    docker-compose up --build
+    ```
+
+3.  **Access the Services**:
+    - **Frontend (SPA)**: [http://localhost:3000](http://localhost:3000)
+    - **Backend API**: [http://localhost:8080](http://localhost:8080)
+
+## Architecture Highlights
+
+- **Reactive Streaming**: The system uses Spring WebFlux and Server-Sent Events (SSE) to stream story generation token-by-token from the LLM to the UI.
+- **Clean Architecture**: The backend follows Hexagonal Architecture principles to keep domain logic isolated from framework and infrastructure concerns.
