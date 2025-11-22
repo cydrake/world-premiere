@@ -1,4 +1,4 @@
-package xlr.magas.api;
+package xlr.magas;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
