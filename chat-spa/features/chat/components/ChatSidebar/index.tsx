@@ -7,7 +7,7 @@ export function ChatSidebar() {
     <div className="hidden md:flex w-[280px] flex-col bg-indigo-900 text-indigo-100 h-screen border-r-4 border-indigo-800 shadow-xl z-20">
       <div className="p-4 bg-indigo-950/50">
         <div className="mb-4 px-2 text-xl font-bold text-indigo-200 flex items-center gap-2">
-          <span>📚</span> Story Time
+          <span>📚</span> Teu Tale
         </div>
         <Button 
           variant="ghost" 

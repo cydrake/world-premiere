@@ -7,7 +7,7 @@ export function EmptyChatState() {
         <div className="h-16 w-16 text-amber-500 flex items-center justify-center text-5xl">🏰</div>
       </div>
       <h2 className="text-3xl font-bold text-amber-900 mb-4 font-serif">
-        Welcome to Story Time!
+        Welcome to Teu Tale!
       </h2>
       <p className="text-lg text-amber-700/70 max-w-md leading-relaxed font-medium">
         I can tell you magical stories, answer curious questions, or just have a friendly chat. What shall we do today?

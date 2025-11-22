@@ -5,7 +5,7 @@ import './globals.css'
 const fredoka = Fredoka({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700'] })
 
 export const metadata: Metadata = {
-  title: 'Story Time Chat',
+  title: 'Teu Tale Chat',
   description: 'A magical chat experience',
 }
 
