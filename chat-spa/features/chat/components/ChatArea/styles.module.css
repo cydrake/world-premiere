@@ -1,0 +1,11 @@
+.magicalBackground {
+  width: 100%;
+  height: 100%;
+  opacity: 0.3;
+  pointer-events: none;
+  background-color: hotpink;
+  -webkit-mask-image: url('/bg.png');
+  mask-image: url('/bg.png');
+  -webkit-mask-repeat: repeat;
+  mask-repeat: repeat;
+}

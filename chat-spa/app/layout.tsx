@@ -1,12 +1,16 @@
 import type { Metadata } from 'next'
-import { Fredoka } from 'next/font/google'
+import { Varela_Round } from 'next/font/google'
+import Image from 'next/image'
 import './globals.css'
 
-const fredoka = Fredoka({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700'] })
+const varelaRound = Varela_Round({ subsets: ['latin'], weight: ['400'] })
 
 export const metadata: Metadata = {
   title: 'Teu Tale Chat',
   description: 'A magical chat experience',
+  icons: {
+    icon: '/favicon.png',
+  },
 }
 
 export default function RootLayout({
@@ -16,7 +20,21 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={fredoka.className}>{children}</body>
+      <body className={varelaRound.className}>
+        <div className="fixed inset-0 -z-10">
+          <Image
+            src="/bg.png"
+            alt="Magical Background"
+            fill
+            priority
+            sizes="100vw"
+            style={{
+              objectFit: 'cover',
+            }}
+          />
+        </div>
+        {children}
+      </body>
     </html>
   )
 }

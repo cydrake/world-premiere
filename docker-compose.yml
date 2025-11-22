@@ -11,11 +11,18 @@ services:
       - ./chat-api/.env
 
   chat-spa:
-    build: ./chat-spa
+    build:
+      context: ./chat-spa
+      target: deps
+    volumes:
+      - ./chat-spa:/app
+      - /app/node_modules
     ports:
       - "3000:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8080
+      - WATCHPACK_POLLING=true
+    command: npm run dev
 
   sonarqube:
     image: sonarqube:community

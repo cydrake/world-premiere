@@ -1,0 +1,109 @@
+/* ChatInput.module.css: Extracted from inline classes in ChatInput/index.tsx for maintainability and best practices. */
+
+.inputContainer {
+  padding: 1.5rem;
+  background: rgba(136, 19, 55, 0.9); /* bg-pink-900/90 */
+  backdrop-filter: blur(8px); /* backdrop-blur */
+  position: relative;
+  overflow: hidden;
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  max-width: 48rem;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  padding: 0.75rem;
+  border-width: 2px;
+  border-radius: 1.5rem;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  background: #fff;
+  border-color: #be185d; /* border-pink-700 */
+  transition: all 0.2s;
+}
+.inputWrapper:focus-within {
+  box-shadow: 0 0 0 4px rgba(190, 24, 93, 0.5);
+  border-color: #db2777; /* border-pink-600 */
+}
+
+.textarea {
+  width: 100%;
+  max-height: 200px;
+  min-height: 24px;
+  resize: none;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #0f172a; /* text-slate-900 */
+  transition: box-shadow 0.2s;
+}
+.textarea:disabled {
+  cursor: not-allowed;
+}
+.textarea::placeholder {
+  color: #94a3b8; /* text-slate-400 */
+}
+
+.sendButton {
+  margin-bottom: 0.125rem;
+  height: 2.5rem;
+  width: 2.5rem;
+  border-radius: 9999px;
+  background: #be185d; /* bg-pink-700 */
+  color: #fff;
+  box-shadow: 0 2px 8px 0 rgb(190 24 93 / 0.15);
+  transition: all 0.2s;
+}
+.sendButton:hover {
+  background: #db2777; /* hover:bg-pink-600 */
+  box-shadow: 0 4px 16px 0 rgb(190 24 93 / 0.25);
+  transform: scale(1.05);
+}
+.sendButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+.sendButton:not(:disabled) {
+  cursor: pointer;
+}
+
+.tooltip {
+  position: absolute;
+  left: 50%;
+  top: -2.25rem;
+  transform: translateX(-50%);
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.375rem;
+  background: #1e293b; /* bg-slate-800 */
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 20;
+  box-shadow: 0 4px 16px 0 rgb(30 41 59 / 0.25);
+  transition: opacity 0.2s;
+}
+.group:hover .tooltip {
+  opacity: 1;
+}
+
+.inputFooter {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #f9a8d4; /* text-pink-300 */
+  margin-top: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  position: relative;
+  z-index: 10;
+}

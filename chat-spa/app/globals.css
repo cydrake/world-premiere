@@ -1,16 +1,19 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@source "../features";
 
 :root {
-  --foreground-rgb: 66, 60, 50;
-  --background-start-rgb: 255, 251, 235;
-  --background-end-rgb: 255, 251, 235;
+  --foreground-rgb: 51, 65, 85;
+  --background-start-rgb: 248, 250, 252;
+  --background-end-rgb: 248, 250, 252;
 }
 
-body {
+html, body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-start-rgb));
+  overflow: hidden;
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 ::-webkit-scrollbar {
@@ -18,14 +21,36 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #fef3c7;
+  background: #e2e8f0;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d6d3d1;
+  background: #94a3b8;
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a29e;
+  background: #64748b;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes shadowWidth {
+  0%, 100% {
+    width: 100px;
+    opacity: 0.1;
+  }
+  50% {
+    width: 30px;
+    opacity: 0.5;
+  }
 }
