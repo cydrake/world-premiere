@@ -1,7 +1,8 @@
 package xlr.magas.domain.ports.in;
 
-import xlr.magas.domain.model.Story;
+import reactor.core.publisher.Flux;
+import xlr.magas.domain.model.Scene;
 
 public interface GenerateStoryUseCase {
-    Story generateStory(String topic);
+    Flux<Scene> generateStory(String topic);
 }
