@@ -14,8 +14,8 @@ public class OpenAIImageAdapter implements ImageModelPort {
     private final RestTemplate restTemplate;
     private final String apiKey;
 
-    public OpenAIImageAdapter(@Value("${spring.ai.openai.api-key}") String apiKey) {
-        this.restTemplate = new RestTemplate();
+    public OpenAIImageAdapter(RestTemplate restTemplate, @Value("${spring.ai.openai.api-key}") String apiKey) {
+        this.restTemplate = restTemplate;
         this.apiKey = apiKey;
     }
 

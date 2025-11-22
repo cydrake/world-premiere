@@ -19,6 +19,8 @@ hs_err_pid*
 
 # Node.js / Next.js (chat-spa)
 node_modules/
+coverage/
+.nyc_output/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
