@@ -2,10 +2,6 @@ package xlr.magas.domain.system;
 
 import org.springframework.stereotype.Component;
 
-/**
- * The God System - the supreme storyteller who creates the foundational story structure.
- * This is static and unchanging, serving as the master storyteller.
- */
 @Component
 public class GodSystemProvider implements SystemMessageProvider {
 

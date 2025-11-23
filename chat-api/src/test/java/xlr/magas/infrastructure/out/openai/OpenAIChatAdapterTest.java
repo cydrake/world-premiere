@@ -1,305 +1,211 @@
 package xlr.magas.infrastructure.out.openai;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.ChatClient.SystemSpec;
-import org.springframework.ai.chat.client.ChatClient.UserSpec;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
-import xlr.magas.domain.model.Scene;
+import xlr.magas.domain.ports.out.ChatModelPort;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class OpenAIChatAdapterTest {
 
-    @Mock
+    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     private ChatClient.Builder chatClientBuilder;
 
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     private ChatClient chatClient;
 
+    private OpenAIChatAdapter adapter;
+
     @BeforeEach
     void setUp() {
         when(chatClientBuilder.build()).thenReturn(chatClient);
+        adapter = new OpenAIChatAdapter(chatClientBuilder);
     }
 
     @Test
-    void shouldStreamScenes() {
-        String json1 = "{\"order\":1,\"title\":\"Scene 1\",\"setting\":null,\"texts\":null}";
-        String json2 = "{\"order\":2,\"title\":\"Scene 2\",\"setting\":null,\"texts\":null}";
+    void shouldReturnFluxOfStrings() {
+        // Given
+        String systemMessage = "You are a helpful assistant";
+        String userMessage = "Tell me a story";
+        Flux<String> expectedChunks = Flux.just("Once", " upon", " a", " time");
 
         when(chatClient.prompt()
-                .system(any(java.util.function.Consumer.class))
-                .user(any(java.util.function.Consumer.class))
+                .system(eq(systemMessage))
+                .user(eq(userMessage))
                 .stream()
                 .content())
-                .thenReturn(Flux.just(
-                    json1 + "\n",
-                    json2
-                ));
+                .thenReturn(expectedChunks);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        OpenAIChatAdapter adapter = new OpenAIChatAdapter(chatClientBuilder, objectMapper);
+        // When
+        Flux<String> result = adapter.askChatModel(systemMessage, userMessage);
 
-        Flux<Scene> result = adapter.askChatModel("system", "user");
-
+        // Then
         StepVerifier.create(result)
-                .expectNextMatches(s -> s.order() == 1 && s.title().equals("Scene 1"))
-                .expectNextMatches(s -> s.order() == 2 && s.title().equals("Scene 2"))
+                .expectNext("data: Once\n\n")
+                .expectNext("data:  upon\n\n")
+                .expectNext("data:  a\n\n")
+                .expectNext("data:  time\n\n")
+                .expectNext("data: [DONE]\n\n")
                 .verifyComplete();
     }
 
     @Test
-    void shouldHandleParsingErrors() {
-        String validJson = "{\"order\":1,\"title\":\"Scene 1\",\"setting\":null,\"texts\":null}";
-        String invalidJson = "{invalid}";
+    void shouldHandleEmptyResponseStream() {
+        // Given
+        String systemMessage = "You are a helpful assistant";
+        String userMessage = "Say nothing";
 
         when(chatClient.prompt()
-                .system(any(java.util.function.Consumer.class))
-                .user(any(java.util.function.Consumer.class))
+                .system(eq(systemMessage))
+                .user(eq(userMessage))
                 .stream()
                 .content())
-                .thenReturn(Flux.just(
-                    validJson + "\n",
-                    invalidJson + "\n"
-                ));
+                .thenReturn(Flux.empty());
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        OpenAIChatAdapter adapter = new OpenAIChatAdapter(chatClientBuilder, objectMapper);
+        // When
+        Flux<String> result = adapter.askChatModel(systemMessage, userMessage);
 
-        Flux<Scene> result = adapter.askChatModel("system", "user");
-
+        // Then
         StepVerifier.create(result)
-                .expectNextMatches(s -> s.order() == 1 && s.title().equals("Scene 1"))
-                // Invalid JSON is logged and skipped
+                .expectNext("data: [DONE]\n\n")
                 .verifyComplete();
     }
 
     @Test
-    void shouldHandleStreamErrors() {
+    void shouldHandleSingleChunkResponse() {
+        // Given
+        String systemMessage = "You are a helpful assistant";
+        String userMessage = "Say hello";
+        String singleChunk = "Hello, world!";
+
         when(chatClient.prompt()
-                .system(any(java.util.function.Consumer.class))
-                .user(any(java.util.function.Consumer.class))
+                .system(eq(systemMessage))
+                .user(eq(userMessage))
                 .stream()
                 .content())
-                .thenReturn(Flux.error(new RuntimeException("Upstream error")));
+                .thenReturn(Flux.just(singleChunk));
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        OpenAIChatAdapter adapter = new OpenAIChatAdapter(chatClientBuilder, objectMapper);
+        // When
+        Flux<String> result = adapter.askChatModel(systemMessage, userMessage);
 
-        Flux<Scene> result = adapter.askChatModel("system", "user");
+        // Then
+        StepVerifier.create(result)
+                .expectNext("data: Hello, world!\n\n")
+                .expectNext("data: [DONE]\n\n")
+                .verifyComplete();
+    }
 
+    @Test
+    void shouldHandleMultipleWordsInChunks() {
+        // Given
+        String systemMessage = "You are a storyteller";
+        String userMessage = "Tell me a short story";
+        Flux<String> chunks = Flux.just("In a", " far away", " land,", " there lived", " a dragon.");
+
+        when(chatClient.prompt()
+                .system(eq(systemMessage))
+                .user(eq(userMessage))
+                .stream()
+                .content())
+                .thenReturn(chunks);
+
+        // When
+        Flux<String> result = adapter.askChatModel(systemMessage, userMessage);
+
+        // Then
+        StepVerifier.create(result)
+                .expectNext("data: In a\n\n")
+                .expectNext("data:  far away\n\n")
+                .expectNext("data:  land,\n\n")
+                .expectNext("data:  there lived\n\n")
+                .expectNext("data:  a dragon.\n\n")
+                .expectNext("data: [DONE]\n\n")
+                .verifyComplete();
+    }
+
+    @Test
+    void shouldPropagateErrorsFromChatClient() {
+        // Given
+        String systemMessage = "You are a helpful assistant";
+        String userMessage = "Cause an error";
+        RuntimeException expectedError = new RuntimeException("AI service unavailable");
+
+        when(chatClient.prompt()
+                .system(eq(systemMessage))
+                .user(eq(userMessage))
+                .stream()
+                .content())
+                .thenReturn(Flux.error(expectedError));
+
+        // When
+        Flux<String> result = adapter.askChatModel(systemMessage, userMessage);
+
+        // Then
         StepVerifier.create(result)
                 .expectError(RuntimeException.class)
                 .verify();
     }
 
     @Test
-    void shouldHandlePartialChunks() {
-        String part1 = "{\"order\":1,\"ti";
-        String part2 = "tle\":\"Scene 1\",\"setting\":null,\"texts\":null}\n";
+    void shouldHandleSpecialCharactersInChunks() {
+        // Given
+        String systemMessage = "You are a helpful assistant";
+        String userMessage = "Use special characters";
+        Flux<String> chunks = Flux.just("Hello!", " ¿Cómo", " estás?", " 100%");
 
         when(chatClient.prompt()
-                .system(any(java.util.function.Consumer.class))
-                .user(any(java.util.function.Consumer.class))
+                .system(eq(systemMessage))
+                .user(eq(userMessage))
                 .stream()
                 .content())
-                .thenReturn(Flux.just(part1, part2));
+                .thenReturn(chunks);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        OpenAIChatAdapter adapter = new OpenAIChatAdapter(chatClientBuilder, objectMapper);
+        // When
+        Flux<String> result = adapter.askChatModel(systemMessage, userMessage);
 
-        Flux<Scene> result = adapter.askChatModel("system", "user");
-
+        // Then
         StepVerifier.create(result)
-                .expectNextMatches(s -> s.order() == 1 && s.title().equals("Scene 1"))
+                .expectNext("data: Hello!\n\n")
+                .expectNext("data:  ¿Cómo\n\n")
+                .expectNext("data:  estás?\n\n")
+                .expectNext("data:  100%\n\n")
+                .expectNext("data: [DONE]\n\n")
                 .verifyComplete();
     }
 
     @Test
-    void shouldConfigureSystemAndUserSpecs() {
-        var requestSpec = chatClient.prompt();
-        
-        // Ensure fluent API returns the same mock to allow verification on the same object
-        when(requestSpec.system(any(java.util.function.Consumer.class))).thenReturn(requestSpec);
-        when(requestSpec.user(any(java.util.function.Consumer.class))).thenReturn(requestSpec);
-        
-        // Mock the stream response
-        when(requestSpec.stream().content()).thenReturn(Flux.empty());
+    void shouldImplementChatModelPortInterface() {
+        // Given
+        ChatClient.Builder builder = mock(ChatClient.Builder.class, Answers.RETURNS_DEEP_STUBS);
+        ChatClient mockClient = mock(ChatClient.class, Answers.RETURNS_DEEP_STUBS);
 
-        org.mockito.Mockito.clearInvocations(requestSpec);
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        OpenAIChatAdapter adapter = new OpenAIChatAdapter(chatClientBuilder, objectMapper);
-
-        adapter.askChatModel("system prompt", "user prompt").subscribe();
-
-        ArgumentCaptor<java.util.function.Consumer<SystemSpec>> systemCaptor = ArgumentCaptor.forClass(java.util.function.Consumer.class);
-        verify(requestSpec).system(systemCaptor.capture());
-        
-        SystemSpec systemSpec = org.mockito.Mockito.mock(SystemSpec.class);
-        when(systemSpec.text(any(String.class))).thenReturn(systemSpec);
-        systemCaptor.getValue().accept(systemSpec);
-        verify(systemSpec).text(org.mockito.ArgumentMatchers.contains("system prompt"));
-        verify(systemSpec).param(eq("format"), any());
-
-        ArgumentCaptor<java.util.function.Consumer<UserSpec>> userCaptor = ArgumentCaptor.forClass(java.util.function.Consumer.class);
-        verify(requestSpec).user(userCaptor.capture());
-
-        UserSpec userSpec = org.mockito.Mockito.mock(UserSpec.class);
-        when(userSpec.text(any(String.class))).thenReturn(userSpec);
-        userCaptor.getValue().accept(userSpec);
-        verify(userSpec).text("{user}");
-        verify(userSpec).param("user", "user prompt");
-    }
-
-    @Test
-    void shouldIgnoreNonJsonLines() {
-        String json1 = "{\"order\":1,\"title\":\"Scene 1\",\"setting\":null,\"texts\":null}";
-        
-        when(chatClient.prompt()
-                .system(any(java.util.function.Consumer.class))
-                .user(any(java.util.function.Consumer.class))
+        when(builder.build()).thenReturn(mockClient);
+        when(mockClient.prompt()
+                .system(any(String.class))
+                .user(any(String.class))
                 .stream()
                 .content())
-                .thenReturn(Flux.just(
-                    "\n",
-                    "Thinking process...\n",
-                    json1 + "\n",
-                    "   \n"
-                ));
+                .thenReturn(Flux.just("test"));
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        OpenAIChatAdapter adapter = new OpenAIChatAdapter(chatClientBuilder, objectMapper);
+        // When
+        ChatModelPort port = new OpenAIChatAdapter(builder);
 
-        Flux<Scene> result = adapter.askChatModel("system", "user");
-
-        StepVerifier.create(result)
-                .expectNextMatches(s -> s.order() == 1)
-                .verifyComplete();
-    }
-
-    @Test
-    void shouldHandleFinalBufferContent() {
-        String json1 = "{\"order\":1,\"title\":\"Scene 1\",\"setting\":null,\"texts\":null}";
-        
-        when(chatClient.prompt()
-                .system(any(java.util.function.Consumer.class))
-                .user(any(java.util.function.Consumer.class))
-                .stream()
-                .content())
-                .thenReturn(Flux.just(json1));
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        OpenAIChatAdapter adapter = new OpenAIChatAdapter(chatClientBuilder, objectMapper);
-
-        Flux<Scene> result = adapter.askChatModel("system", "user");
-
-        StepVerifier.create(result)
-                .expectNextMatches(s -> s.order() == 1)
-                .verifyComplete();
-    }
-
-    @Test
-    void shouldIgnoreInvalidFinalBuffer() {
-        when(chatClient.prompt()
-                .system(any(java.util.function.Consumer.class))
-                .user(any(java.util.function.Consumer.class))
-                .stream()
-                .content())
-                .thenReturn(Flux.just("incomplete json"));
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        OpenAIChatAdapter adapter = new OpenAIChatAdapter(chatClientBuilder, objectMapper);
-
-        Flux<Scene> result = adapter.askChatModel("system", "user");
-
-        StepVerifier.create(result)
-                .verifyComplete();
-    }
-
-    @Test
-    void shouldIgnoreIncompleteJsonLines() {
-        when(chatClient.prompt()
-                .system(any(java.util.function.Consumer.class))
-                .user(any(java.util.function.Consumer.class))
-                .stream()
-                .content())
-                .thenReturn(Flux.just(
-                    "{incomplete json\n"
-                ));
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        OpenAIChatAdapter adapter = new OpenAIChatAdapter(chatClientBuilder, objectMapper);
-
-        Flux<Scene> result = adapter.askChatModel("system", "user");
-
-        StepVerifier.create(result)
-                .verifyComplete();
-    }
-
-    @Test
-    void shouldIgnoreWhitespaceFinalBuffer() {
-        when(chatClient.prompt()
-                .system(any(java.util.function.Consumer.class))
-                .user(any(java.util.function.Consumer.class))
-                .stream()
-                .content())
-                .thenReturn(Flux.just("   "));
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        OpenAIChatAdapter adapter = new OpenAIChatAdapter(chatClientBuilder, objectMapper);
-
-        Flux<Scene> result = adapter.askChatModel("system", "user");
-
-        StepVerifier.create(result)
-                .verifyComplete();
-    }
-
-    @Test
-    void shouldIgnoreIncompleteJsonFinalBuffer() {
-        when(chatClient.prompt()
-                .system(any(java.util.function.Consumer.class))
-                .user(any(java.util.function.Consumer.class))
-                .stream()
-                .content())
-                .thenReturn(Flux.just("{incomplete json"));
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        OpenAIChatAdapter adapter = new OpenAIChatAdapter(chatClientBuilder, objectMapper);
-
-        Flux<Scene> result = adapter.askChatModel("system", "user");
-
-        StepVerifier.create(result)
-                .verifyComplete();
-    }
-
-    @Test
-    void shouldHandleInvalidFinalBuffer() {
-        when(chatClient.prompt()
-                .system(any(java.util.function.Consumer.class))
-                .user(any(java.util.function.Consumer.class))
-                .stream()
-                .content())
-                .thenReturn(Flux.just("{invalid}"));
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        OpenAIChatAdapter adapter = new OpenAIChatAdapter(chatClientBuilder, objectMapper);
-
-        Flux<Scene> result = adapter.askChatModel("system", "user");
-
-        StepVerifier.create(result)
+        // Then
+        assert port instanceof ChatModelPort;
+        StepVerifier.create(port.askChatModel("system", "user"))
+                .expectNext("data: test\n\n")
+                .expectNext("data: [DONE]\n\n")
                 .verifyComplete();
     }
 }
