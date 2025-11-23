@@ -3,7 +3,6 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MessageList } from './index';
 
-// Mock scrollIntoView
 window.HTMLElement.prototype.scrollIntoView = jest.fn();
 
 describe('MessageList', () => {
@@ -19,17 +18,38 @@ describe('MessageList', () => {
     expect(screen.getByText('Hi there')).toBeInTheDocument();
   });
 
-  it('renders loading state', () => {
-    render(<MessageList messages={mockMessages} isLoading={true} />);
-    
-    const loadingIndicator = document.querySelector('.animate-pulse');
-    expect(loadingIndicator).toBeInTheDocument();
+  it('renders streaming messages with cursor', () => {
+    const streamingMessages = [
+      ...mockMessages,
+      {
+        id: '3',
+        role: 'assistant' as const,
+        content: 'Streaming response',
+        isStreaming: true,
+        timestamp: new Date()
+      }
+    ];
+
+    render(<MessageList messages={streamingMessages} />);
+
+    expect(screen.getByText('Streaming response')).toBeInTheDocument();
+
+    const cursors = document.querySelectorAll('.animate-pulse');
+    expect(cursors.length).toBeGreaterThan(0);
   });
 
   it('scrolls to bottom on new messages', () => {
     const { rerender } = render(<MessageList messages={[]} />);
     
     rerender(<MessageList messages={mockMessages} />);
+    
+    expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalled();
+  });
+
+  it('scrolls to bottom when loading state changes', () => {
+    const { rerender } = render(<MessageList messages={mockMessages} isLoading={false} />);
+    
+    rerender(<MessageList messages={mockMessages} isLoading={true} />);
     
     expect(window.HTMLElement.prototype.scrollIntoView).toHaveBeenCalled();
   });

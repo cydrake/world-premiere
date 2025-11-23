@@ -26,13 +26,6 @@ describe('ChatArea', () => {
     expect(screen.queryByText('Welcome to Teu Tale!')).not.toBeInTheDocument();
   });
 
-  it('renders loading state', () => {
-    render(<ChatArea messages={mockMessages} onSend={() => {}} isLoading={true} />);
-    
-    const loadingIndicator = document.querySelector('.animate-pulse');
-    expect(loadingIndicator).toBeInTheDocument();
-  });
-
   it('scrolls to bottom on new messages', () => {
     const { rerender } = render(<ChatArea messages={[]} onSend={() => {}} />);
     

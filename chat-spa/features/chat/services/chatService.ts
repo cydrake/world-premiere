@@ -26,7 +26,7 @@ export class RealChatService implements IChatService {
       };
     }
 
-    if (typeof data === 'object' && 'content' in data) {
+    if (typeof data === 'object' && !Array.isArray(data)) {
       return {
         id: data.id ? String(data.id) : (Date.now() + 1).toString(),
         role: data.role || 'assistant',
@@ -81,12 +81,10 @@ export class RealChatService implements IChatService {
     let done = false;
 
     while (!done) {
-      // eslint-disable-next-line no-await-in-loop
       const { value, done: streamDone } = await reader.read();
       done = !!streamDone;
       if (value) buffer += decoder.decode(value, { stream: true });
 
-      // Process any complete SSE event blocks
       let idx: number;
       while ((idx = buffer.indexOf('\n\n')) !== -1) {
         const event = buffer.slice(0, idx);
@@ -107,7 +105,6 @@ export class RealChatService implements IChatService {
       }
     }
 
-    // Process any remaining buffer
     if (buffer) {
       const matches = Array.from(buffer.matchAll(/^data:\s?(.*)$/gm)).map((m) => m[1]);
       if (matches.length > 0) assembled += matches.join('\n');
@@ -138,7 +135,6 @@ export class RealChatService implements IChatService {
     if (contentType.includes('application/json')) return this.parseJsonResponse(res);
     if (contentType.includes('text/event-stream') || contentType.includes('event-stream')) return this.parseSSEResponse(res);
 
-    // Fallback
     const text = await res.text().catch(() => '');
     console.log('API Response (fallback):', text);
     return {
@@ -166,7 +162,6 @@ export class RealChatService implements IChatService {
     const contentType = res.headers.get('content-type') || '';
     console.log('Response content-type:', contentType);
 
-    // Log raw response content for debugging
     if (res.body) {
       const [logStream, processStream] = res.body.tee();
       const logReader = logStream.getReader();
@@ -187,16 +182,13 @@ export class RealChatService implements IChatService {
         }
       })();
 
-      // Use the process stream for actual processing
       res = { ...res, body: processStream };
     }
 
-    // Handle text/event-stream (SSE) format
     if (contentType.includes('text/event-stream') || contentType.includes('event-stream')) {
       return yield* this.processSSEResponse(res.body!);
     }
 
-    // Fallback for other content types
     const text = await res.text().catch(() => '');
     const message: Message = {
       id: (Date.now() + 1).toString(),
@@ -224,7 +216,6 @@ export class RealChatService implements IChatService {
           console.log('Received buffer chunk:', buffer);
         }
 
-        // Process complete SSE events
         const result = this.processSSEBuffer(buffer);
         buffer = result.remainingBuffer;
         console.log('Processing SSE events:', result.events.length);
@@ -235,7 +226,6 @@ export class RealChatService implements IChatService {
     }
 
     console.log('Stream ended, final content:', assembledContent);
-    // Return final message if stream ended without [DONE]
     return {
       id: (Date.now() + 1).toString(),
       role: 'assistant',
@@ -289,10 +279,8 @@ export class RealChatService implements IChatService {
       let data: string | null = null;
 
       if (line.startsWith('data:data: ')) {
-        // Handle malformed SSE format where backend sends "data:data: content"
         data = line.slice(11).trim();
       } else if (line.startsWith('data: ')) {
-        // Handle standard SSE format
         data = line.slice(6).trim();
       }
 
@@ -309,6 +297,5 @@ export class RealChatService implements IChatService {
   }
 }
 
-// Export chatService using RealChatService
 export const chatService: IChatService = new RealChatService();
 export default chatService;

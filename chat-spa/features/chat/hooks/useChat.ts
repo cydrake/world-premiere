@@ -82,7 +82,9 @@ export function useChat(service: IChatService = chatService) {
       }
     } catch (error) {
       console.error('Failed to send message:', error);
-      setMessages((prev) => prev.filter((msg) => msg.id !== streamingMessageIdRef.current));
+      flushSync(() => {
+        setMessages((prev) => prev.filter((msg) => msg.id !== streamingMessageIdRef.current));
+      });
       streamingMessageIdRef.current = null;
     } finally {
       setIsLoading(false);
