@@ -2,9 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { SendHorizontal } from 'lucide-react';
 import { Button } from '@/components/atoms/Button';
 import styles from './styles.module.css';
+import chatService from '../../services/chatService';
 
 interface ChatInputProps {
-  onSend: (message: string) => void;
+  onSend?: (message: string) => void;
   disabled?: boolean;
 }
 
@@ -12,10 +13,21 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
   const [input, setInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleSend = () => {
-    if (input.trim() && !disabled) {
-      onSend(input.trim());
+  const handleSend = async () => {
+    if (!input.trim() || disabled) return;
+
+    const message = input.trim();
+    if (onSend) {
+      onSend(message);
       setInput('');
+      return;
+    }
+
+    try {
+      setInput('');
+      await chatService.sendMessage(message);
+    } catch (err) {
+      console.error('chatService.sendMessage failed', err);
     }
   };
 

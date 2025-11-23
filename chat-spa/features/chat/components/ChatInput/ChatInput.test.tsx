@@ -8,7 +8,7 @@ describe('ChatInput', () => {
   it('renders input and button', () => {
     render(<ChatInput onSend={() => {}} />);
     
-    expect(screen.getByPlaceholderText('Write your story here...')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Write your wish here...')).toBeInTheDocument();
     expect(screen.getByRole('button')).toBeInTheDocument();
   });
 
@@ -16,7 +16,7 @@ describe('ChatInput', () => {
     const handleSend = jest.fn();
     render(<ChatInput onSend={handleSend} />);
     
-    const input = screen.getByPlaceholderText('Write your story here...');
+    const input = screen.getByPlaceholderText('Write your wish here...');
     const button = screen.getByRole('button');
 
     await userEvent.type(input, 'Hello');
@@ -30,7 +30,7 @@ describe('ChatInput', () => {
     const handleSend = jest.fn();
     render(<ChatInput onSend={handleSend} />);
     
-    const input = screen.getByPlaceholderText('Write your story here...');
+    const input = screen.getByPlaceholderText('Write your wish here...');
 
     await userEvent.type(input, 'Hello{enter}');
 
@@ -51,7 +51,7 @@ describe('ChatInput', () => {
   it('is disabled when disabled prop is true', () => {
     render(<ChatInput onSend={() => {}} disabled={true} />);
     
-    expect(screen.getByPlaceholderText('Write your story here...')).toBeDisabled();
+    expect(screen.getByPlaceholderText('Write your wish here...')).toBeDisabled();
     expect(screen.getByRole('button')).toBeDisabled();
   });
 });

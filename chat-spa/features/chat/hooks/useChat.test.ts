@@ -13,6 +13,11 @@ describe('useChat', () => {
 
   const mockService: IChatService = {
     sendMessage: jest.fn().mockResolvedValue(mockResponse),
+    sendMessageStream: jest.fn().mockImplementation(async function* () {
+      yield 'Response ';
+      yield 'content';
+      return mockResponse;
+    }),
   };
 
   beforeEach(() => {
@@ -46,10 +51,13 @@ describe('useChat', () => {
       await result.current.sendMessage('Hello');
     });
 
-    expect(mockService.sendMessage).toHaveBeenCalledWith('Hello');
-    
+    expect(mockService.sendMessageStream).toHaveBeenCalledWith('Hello');
+
     expect(result.current.messages).toHaveLength(2);
-    expect(result.current.messages[1]).toEqual(mockResponse);
+    expect(result.current.messages[1]).toMatchObject({
+      role: 'assistant',
+      content: 'Response content',
+    });
     expect(result.current.isLoading).toBe(false);
   });
 
@@ -60,13 +68,16 @@ describe('useChat', () => {
       await result.current.sendMessage('   ');
     });
 
-    expect(mockService.sendMessage).not.toHaveBeenCalled();
+    expect(mockService.sendMessageStream).not.toHaveBeenCalled();
     expect(result.current.messages).toHaveLength(0);
   });
 
   it('handles service errors gracefully', async () => {
     const errorService: IChatService = {
       sendMessage: jest.fn().mockRejectedValue(new Error('Network error')),
+      sendMessageStream: jest.fn().mockImplementation(async function* () {
+        throw new Error('Network error');
+      }),
     };
 
     const { result } = renderHook(() => useChat(errorService));
