@@ -100,6 +100,18 @@ chat-spa/
 
 - **Environment Variables**:
   - `NEXT_PUBLIC_API_URL`: URL of the backend API (default: `http://localhost:8080`)
+   - `NEXT_PUBLIC_USE_MOCK`: when set to `true`, the frontend will use a local mock chat service instead of calling the backend (default: `false`).
+
+### API Integration
+
+The frontend can call the backend chat endpoint at `/api/v1/chat`. By default the app will call the relative path (same origin). To call a different backend, set `NEXT_PUBLIC_API_URL`.
+
+Example `.env.local`:
+
+```
+NEXT_PUBLIC_API_URL=http://localhost:8080
+NEXT_PUBLIC_USE_MOCK=false
+```
 
 ## 🤝 Contributing
 
