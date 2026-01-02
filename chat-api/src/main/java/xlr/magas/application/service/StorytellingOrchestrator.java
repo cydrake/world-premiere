@@ -3,7 +3,6 @@ package xlr.magas.application.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
-import xlr.magas.domain.model.Scene;
 import xlr.magas.domain.model.StoryBlueprint;
 import xlr.magas.domain.ports.out.ChatModelPort;
 import xlr.magas.domain.system.*;
@@ -23,9 +22,9 @@ public class StorytellingOrchestrator {
         this.objectMapper = objectMapper;
     }
 
-    public Flux<String> createStoryBlueprint(String topic) {
+    public Flux<String> createStoryBlueprint(String topic, String language) {
         String systemMessage = godSystemProvider.getSystemMessage();
-        String userMessage = String.format("Create a comprehensive story blueprint for a story about: %s", topic);
+        String userMessage = String.format("Create a comprehensive story blueprint for a story about: %s. The output must be in %s language.", topic, language);
 
         return chatModelPort.askChatModel(systemMessage, userMessage);
     }
@@ -71,7 +70,7 @@ public class StorytellingOrchestrator {
         try {
             blueprintJson = objectMapper.writeValueAsString(blueprint);
         } catch (Exception e) {
-            blueprintJson = blueprint.toString(); // Fallback to toString
+            blueprintJson = blueprint.toString();
         }
 
         NarratorSystemProvider narratorSystem = new NarratorSystemProvider(blueprintJson);

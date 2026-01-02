@@ -68,7 +68,7 @@ describe('useChat', () => {
       expect(result.current.messages).toHaveLength(2);
     });
 
-    expect(streamingService.sendMessageStream).toHaveBeenCalledWith('Tell a story');
+    expect(streamingService.sendMessageStream).toHaveBeenCalledWith('Tell a story', expect.any(String));
 
     expect(result.current.messages[0].role).toBe('user');
     expect(result.current.messages[1].role).toBe('assistant');
@@ -76,14 +76,14 @@ describe('useChat', () => {
     expect(result.current.messages[1].content).toBe('Once upon a time');
   });
 
-  it('adds spaces between words during streaming', async () => {
+  it('concatenates chunks without adding spaces', async () => {
     const streamingService: IChatService = {
       sendMessage: jest.fn().mockResolvedValue(mockResponse),
       sendMessageStream: jest.fn().mockImplementation(async function* () {
         yield 'Hello';
         yield 'world';
         yield '!';
-        return { ...mockResponse, content: 'Hello world!' };
+        return { ...mockResponse, content: 'Helloworld!' };
       }),
     };
 
@@ -93,7 +93,7 @@ describe('useChat', () => {
       await result.current.sendMessage('Test');
     });
 
-    expect(result.current.messages[1].content).toBe('Hello world!');
+    expect(result.current.messages[1].content).toBe('Helloworld!');
   });
 
   it('does not send empty messages', async () => {
@@ -176,7 +176,7 @@ describe('useChat', () => {
     expect(result.current.messages).toHaveLength(2);
     expect(result.current.messages[0].role).toBe('user');
     expect(result.current.messages[1].role).toBe('assistant');
-    expect(result.current.messages[1].content).toBe('First chunk Second chunk');
+    expect(result.current.messages[1].content).toBe('First chunkSecond chunk');
     expect(result.current.messages[1].isStreaming).toBe(false);
     expect(result.current.streamingMessageId).toBeNull();
     expect(result.current.isLoading).toBe(false);

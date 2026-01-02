@@ -35,25 +35,12 @@ export function useChat(service: IChatService = chatService) {
       setMessages((prev) => [...prev, assistantMessage]);
       streamingMessageIdRef.current = assistantMessageId;
 
-      const stream = service.sendMessageStream(content);
+      const language = typeof navigator !== 'undefined' ? navigator.language : 'English';
+      const stream = service.sendMessageStream(content, language);
       let accumulatedContent = '';
       for await (const chunk of stream) {
         console.log('chunk:', chunk);
         if (typeof chunk === 'string') {
-          if (accumulatedContent.length > 0 && 
-              !accumulatedContent.endsWith(' ') && 
-              !accumulatedContent.endsWith('\n') &&
-              chunk.trim().length > 0 && 
-              !chunk.startsWith(' ') &&
-              !chunk.startsWith('\n') &&
-              !chunk.startsWith('.') &&
-              !chunk.startsWith(',') &&
-              !chunk.startsWith('!') &&
-              !chunk.startsWith('?') &&
-              !chunk.startsWith(':') &&
-              !chunk.startsWith(';')) {
-            accumulatedContent += ' ';
-          }
           accumulatedContent += chunk;
           flushSync(() => {
             setMessages((prev) =>

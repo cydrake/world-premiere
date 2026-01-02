@@ -10,6 +10,7 @@ import reactor.core.publisher.Flux;
 import xlr.magas.domain.ports.in.GenerateStoryUseCase;
 
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -26,7 +27,6 @@ class AnswerControllerTest {
 
     @Test
     void shouldReturnStreamingAnswer() throws Exception {
-        // Mock the streaming response with SSE-formatted chunks
         Flux<String> mockStream = Flux.just(
             "data: Once",
             "data:  upon",
@@ -34,9 +34,9 @@ class AnswerControllerTest {
             "data:  time",
             "data: [DONE]"
         );
-        when(generateStoryUseCase.generateStory(anyString())).thenReturn(mockStream);
+        when(generateStoryUseCase.generateStory(anyString(), anyString())).thenReturn(mockStream);
 
-        mockMvc.perform(get("/chat").param("question", "Tell me a story"))
+        mockMvc.perform(get("/chat").param("question", "Tell me a story").param("language", "English"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM_VALUE));
     }
@@ -44,7 +44,7 @@ class AnswerControllerTest {
     @Test
     void shouldHandleEmptyQuestionWithDefault() throws Exception {
         Flux<String> mockStream = Flux.just("data: Hello", "data: [DONE]");
-        when(generateStoryUseCase.generateStory(anyString())).thenReturn(mockStream);
+        when(generateStoryUseCase.generateStory(anyString(), anyString())).thenReturn(mockStream);
 
         mockMvc.perform(get("/chat"))
                 .andExpect(status().isOk())
@@ -53,9 +53,8 @@ class AnswerControllerTest {
 
     @Test
     void shouldHandleStreamingError() throws Exception {
-        // Mock a stream that errors
         Flux<String> errorStream = Flux.error(new RuntimeException("AI service unavailable"));
-        when(generateStoryUseCase.generateStory(anyString())).thenReturn(errorStream);
+        when(generateStoryUseCase.generateStory(anyString(), anyString())).thenReturn(errorStream);
 
         mockMvc.perform(get("/chat").param("question", "Hello"))
                 .andExpect(status().isOk()); // SSE streams return 200 even with errors

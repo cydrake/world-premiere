@@ -22,8 +22,8 @@ public class OpenAIChatAdapter implements ChatModelPort {
                 .stream()
                 .content()
                 .map(chunk -> {
-                    // For text/event-stream, emit each chunk as SSE data
-                    return "data: " + chunk + "\n\n";
+                    if (chunk == null) return "";
+                    return "data: " + chunk.replace("\n", "\ndata: ") + "\n\n";
                 })
                 .concatWith(Flux.just("data: [DONE]\n\n"));
     }

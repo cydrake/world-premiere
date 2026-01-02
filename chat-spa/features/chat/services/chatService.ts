@@ -1,8 +1,8 @@
 import { Message } from '../types';
 
 export interface IChatService {
-  sendMessage(content: string): Promise<Message>;
-  sendMessageStream(content: string): AsyncGenerator<string, Message, unknown>;
+  sendMessage(content: string, language?: string): Promise<Message>;
+  sendMessageStream(content: string, language?: string): AsyncGenerator<string, Message, unknown>;
 }
 
 export class RealChatService implements IChatService {
@@ -118,9 +118,9 @@ export class RealChatService implements IChatService {
     };
   }
 
-  async sendMessage(content: string): Promise<Message> {
+  async sendMessage(content: string, language: string = 'English'): Promise<Message> {
     const urlBase = this.baseUrl || '';
-    const url = `${urlBase}/api/v1/chat?question=${encodeURIComponent(content)}`;
+    const url = `${urlBase}/api/v1/chat?question=${encodeURIComponent(content)}&language=${encodeURIComponent(language)}`;
 
     const res = await fetch(url, {
       method: 'GET',
@@ -145,9 +145,9 @@ export class RealChatService implements IChatService {
     };
   }
 
-  async* sendMessageStream(content: string): AsyncGenerator<string, Message, unknown> {
+  async* sendMessageStream(content: string, language: string = 'English'): AsyncGenerator<string, Message, unknown> {
     const urlBase = this.baseUrl || '';
-    const url = `${urlBase}/api/v1/chat?question=${encodeURIComponent(content)}`;
+    const url = `${urlBase}/api/v1/chat?question=${encodeURIComponent(content)}&language=${encodeURIComponent(language)}`;
     console.log('Starting streaming request to:', url);
 
     let res = await fetch(url, {
@@ -275,22 +275,39 @@ export class RealChatService implements IChatService {
     const lines = event.split('\n');
     console.log('Processing SSE event lines:', lines);
 
+    let chunk = '';
+    let done = false;
+    let hasData = false;
+
     for (const line of lines) {
       let data: string | null = null;
 
       if (line.startsWith('data:data: ')) {
-        data = line.slice(11).trim();
+        data = line.slice(11);
       } else if (line.startsWith('data: ')) {
-        data = line.slice(6).trim();
+        data = line.slice(6);
       }
 
       if (data !== null) {
         console.log('Found data line:', data);
-        if (data === '[DONE]') {
-          return { done: true, content: currentContent };
+        if (data.trim() === '[DONE]') {
+          done = true;
+        } else {
+          if (hasData) {
+            chunk += '\n';
+          }
+          chunk += data;
+          hasData = true;
         }
-        return { done: false, content: currentContent + data, chunk: data };
       }
+    }
+
+    if (done) {
+      return { done: true, content: currentContent };
+    }
+
+    if (hasData) {
+      return { done: false, content: currentContent + chunk, chunk: chunk };
     }
 
     return { done: false, content: currentContent };

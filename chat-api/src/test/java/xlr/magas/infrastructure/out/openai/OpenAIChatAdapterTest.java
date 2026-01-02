@@ -208,4 +208,29 @@ class OpenAIChatAdapterTest {
                 .expectNext("data: [DONE]\n\n")
                 .verifyComplete();
     }
+
+    @Test
+    void shouldHandleChunksWithNewlines() {
+        // Given
+        String systemMessage = "System";
+        String userMessage = "User";
+        Flux<String> chunks = Flux.just("Line 1\nLine 2", "\nLine 3");
+
+        when(chatClient.prompt()
+                .system(eq(systemMessage))
+                .user(eq(userMessage))
+                .stream()
+                .content())
+                .thenReturn(chunks);
+
+        // When
+        Flux<String> result = adapter.askChatModel(systemMessage, userMessage);
+
+        // Then
+        StepVerifier.create(result)
+                .expectNext("data: Line 1\ndata: Line 2\n\n")
+                .expectNext("data: \ndata: Line 3\n\n")
+                .expectNext("data: [DONE]\n\n")
+                .verifyComplete();
+    }
 }

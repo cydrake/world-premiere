@@ -120,3 +120,7 @@ NEXT_PUBLIC_USE_MOCK=false
 3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+## 📸 Screenshots
+
+![Homepage Desktop Menu Hidden](screenshots/homepage-desktop-menu-hidden.png)
