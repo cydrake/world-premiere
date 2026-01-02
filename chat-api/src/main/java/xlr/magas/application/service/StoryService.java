@@ -15,12 +15,12 @@ public class StoryService implements GenerateStoryUseCase {
     }
 
     @Override
-    public Flux<String> generateStory(String topic) {
+    public Flux<String> generateStory(String topic, String language) {
         // For now, use a simple system message that works with Spring AI
         // TODO: Implement the full 3-tier system once template issues are resolved
         String systemMessage = "You are a helpful AI assistant. Provide engaging, creative responses.";
 
         System.out.println("Using simple system message for topic: " + topic);
-        return chatModelPort.askChatModel(systemMessage, "Tell me a creative story about: " + topic);
+        return chatModelPort.askChatModel(systemMessage, "Tell me a creative story about: " + topic + ". In " + language + " language.");
     }
 }

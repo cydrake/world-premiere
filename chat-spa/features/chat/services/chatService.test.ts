@@ -86,7 +86,7 @@ describe('RealChatService', () => {
 
   describe('sendMessage', () => {
     const mockContent = 'Hello, world!';
-    const mockUrl = `${API_BASE_URL}/api/v1/chat?question=Hello%2C%20world!`;
+    const mockUrl = `${API_BASE_URL}/api/v1/chat?question=Hello%2C%20world!&language=English`;
 
     beforeEach(() => {
       process.env.NEXT_PUBLIC_API_URL = 'https://api.example.com';
@@ -294,7 +294,7 @@ describe('RealChatService', () => {
 
       await serviceWithEmptyBaseUrl.sendMessage(mockContent);
 
-      expect(fetchMock).toHaveBeenCalledWith('/api/v1/chat?question=Hello%2C%20world!', {
+      expect(fetchMock).toHaveBeenCalledWith('/api/v1/chat?question=Hello%2C%20world!&language=English', {
         method: 'GET',
         headers: {
           Accept: 'text/event-stream, application/json;q=0.9, */*;q=0.8',
@@ -320,7 +320,7 @@ describe('RealChatService', () => {
 
       await serviceWithNullBaseUrl.sendMessage(mockContent);
 
-      expect(fetchMock).toHaveBeenCalledWith('/api/v1/chat?question=Hello%2C%20world!', {
+      expect(fetchMock).toHaveBeenCalledWith('/api/v1/chat?question=Hello%2C%20world!&language=English', {
         method: 'GET',
         headers: {
           Accept: 'text/event-stream, application/json;q=0.9, */*;q=0.8',
@@ -331,7 +331,7 @@ describe('RealChatService', () => {
 
   describe('sendMessageStream', () => {
     const mockContent = 'Stream this!';
-    const mockUrl = `${API_BASE_URL}/api/v1/chat?question=Stream%20this!`;
+    const mockUrl = `${API_BASE_URL}/api/v1/chat?question=Stream%20this!&language=English`;
 
     beforeEach(() => {
       process.env.NEXT_PUBLIC_API_URL = 'https://api.example.com';
@@ -546,7 +546,7 @@ describe('RealChatService', () => {
         chunks.push(result.value);
       }
 
-      expect(fetchMock).toHaveBeenCalledWith('/api/v1/chat?question=Stream%20this!', {
+      expect(fetchMock).toHaveBeenCalledWith('/api/v1/chat?question=Stream%20this!&language=English', {
         method: 'GET',
         headers: {
           Accept: 'text/event-stream, application/json;q=0.9, */*;q=0.8',
@@ -582,7 +582,7 @@ describe('RealChatService', () => {
         chunks.push(result.value);
       }
 
-      expect(fetchMock).toHaveBeenCalledWith('/api/v1/chat?question=Stream%20this!', {
+      expect(fetchMock).toHaveBeenCalledWith('/api/v1/chat?question=Stream%20this!&language=English', {
         method: 'GET',
         headers: {
           Accept: 'text/event-stream, application/json;q=0.9, */*;q=0.8',
@@ -765,6 +765,15 @@ describe('RealChatService', () => {
         expect(result.chunk).toBe('Hello World');
       });
 
+      it('should process multiline SSE data', () => {
+        const event = 'data: Line 1\ndata: Line 2';
+        const result = (chatService as any).processSSEEvent(event, 'previous');
+
+        expect(result.done).toBe(false);
+        expect(result.content).toBe('previousLine 1\nLine 2');
+        expect(result.chunk).toBe('Line 1\nLine 2');
+      });
+
       it('should process malformed SSE data line', () => {
         const event = 'data:data: Hello World';
         const result = (chatService as any).processSSEEvent(event, 'previous');
@@ -817,7 +826,7 @@ describe('RealChatService', () => {
         } while (!finalResult.done);
 
         expect(results).toEqual(['chunk1', 'chunk2']);
-        expect(finalResult.value).toBe('initialchunk1chunk2'); // This tests the return assembledContent; line
+        expect(finalResult.value).toBe('initialchunk1chunk2');
       });
 
       it('should return early when event indicates completion', async () => {
@@ -834,7 +843,7 @@ describe('RealChatService', () => {
         } while (!finalResult.done);
 
         expect(results).toEqual(['chunk1']);
-        expect(finalResult.value).toBe('initialchunk1'); // This tests the early return when done
+        expect(finalResult.value).toBe('initialchunk1');
       });
 
       it('should handle empty events array', async () => {
@@ -850,7 +859,7 @@ describe('RealChatService', () => {
         } while (!finalResult.done);
 
         expect(results).toEqual([]);
-        expect(finalResult.value).toBe('initial'); // Should return initial content when no events
+        expect(finalResult.value).toBe('initial');
       });
     });
   });

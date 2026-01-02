@@ -34,7 +34,7 @@ class StoryServiceTest {
         when(chatModelPort.askChatModel(anyString(), anyString()))
                 .thenReturn(mockStream);
 
-        Flux<String> result = storyService.generateStory("dragons");
+        Flux<String> result = storyService.generateStory("dragons", "English");
 
         StepVerifier.create(result)
                 .expectNext("data: Once upon a time")

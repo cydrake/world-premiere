@@ -41,15 +41,16 @@ class StorytellingOrchestratorTest {
     void shouldCreateStoryBlueprint() {
         // Given
         String topic = "dragons";
+        String language = "English";
         String systemMessage = "You are the GOD SYSTEM...";
-        String expectedUserMessage = "Create a comprehensive story blueprint for a story about: dragons";
+        String expectedUserMessage = "Create a comprehensive story blueprint for a story about: dragons. The output must be in English language.";
         Flux<String> expectedFlux = Flux.just("blueprint data");
 
         when(godSystemProvider.getSystemMessage()).thenReturn(systemMessage);
         when(chatModelPort.askChatModel(systemMessage, expectedUserMessage)).thenReturn(expectedFlux);
 
         // When
-        Flux<String> result = storytellingOrchestrator.createStoryBlueprint(topic);
+        Flux<String> result = storytellingOrchestrator.createStoryBlueprint(topic, language);
 
         // Then
         StepVerifier.create(result)

@@ -21,7 +21,8 @@ public class AnswerController {
     }
 
     @GetMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> answer(@RequestParam(value = "question", defaultValue = "Tell me a joke") String question) {
-        return generateStoryUseCase.generateStory(question);
+    public Flux<String> answer(@RequestParam(value = "question", defaultValue = "Tell me a joke") String question,
+                               @RequestParam(value = "language", defaultValue = "English") String language) {
+        return generateStoryUseCase.generateStory(question, language);
     }
 }
